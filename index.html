@@ -1,591 +1,791 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>君の名は。✨ 黄昏の空</title>
+<title>🌾 夏日乡村 · Summer Days</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     height: 100vh;
     overflow: hidden;
-    cursor: crosshair;
-    font-family: 'Hiragino Mincho Pro', 'Noto Serif JP', 'SimSun', serif;
-    /* 黄昏渐变 — 新海诚标志性天空 */
-    background: linear-gradient(
-      180deg,
-      #0a0a2e 0%,
-      #1a1040 15%,
-      #2d1b69 30%,
-      #5b3a8c 45%,
-      #c06c84 60%,
-      #f4a460 72%,
-      #ffcc80 82%,
-      #ffecd2 92%,
-      #ffe8d6 100%
-    );
+    cursor: pointer;
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* ── 星空层 ── */
-  .stars-layer {
+  /* ══════ 天空 ══════ */
+  .sky {
     position: fixed;
     top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 1;
+    width: 100%; height: 65%;
+    background: linear-gradient(180deg,
+      #7ec8e3 0%, #a8d8ea 30%, #c9e8f5 60%, #e8f4f8 100%
+    );
   }
 
-  .star {
+  /* ── 太阳 ── */
+  .sun {
+    position: absolute;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, #fff7c2 0%, #ffe08a 40%, #ffd166 70%, rgba(255,200,100,0) 100%);
+    border-radius: 50%;
+    top: 8%; right: 15%;
+    box-shadow: 0 0 60px 20px rgba(255,240,200,0.6), 0 0 120px 40px rgba(255,220,150,0.3);
+    animation: sunGlow 4s ease-in-out infinite;
+  }
+
+  @keyframes sunGlow {
+    0%, 100% { box-shadow: 0 0 60px 20px rgba(255,240,200,0.6), 0 0 120px 40px rgba(255,220,150,0.3); }
+    50%      { box-shadow: 0 0 80px 30px rgba(255,240,200,0.8), 0 0 140px 50px rgba(255,220,150,0.4); }
+  }
+
+  /* ── 云朵 ── */
+  .cloud {
     position: absolute;
     background: white;
     border-radius: 50%;
-    animation: starGlow var(--dur) ease-in-out infinite;
-    animation-delay: var(--dly);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .cloud::before, .cloud::after {
+    content: ''; position: absolute;
+    background: white; border-radius: 50%;
   }
 
-  @keyframes starGlow {
-    0%, 100% { opacity: 0.25; box-shadow: 0 0 0px white; }
-    50%      { opacity: 1;    box-shadow: 0 0 6px 2px rgba(255,255,255,0.7); }
-  }
-
-  /* ── 光斑粒子（かたわれ時的光） ── */
-  .sparkle {
-    position: absolute;
-    pointer-events: none;
-    z-index: 2;
-    animation: floatUp var(--dur) linear forwards;
-  }
-
-  @keyframes floatUp {
-    0%   { opacity: 1; transform: translateY(0) scale(1); }
-    100% { opacity: 0; transform: translateY(-180px) scale(0); }
-  }
-
-  /* ── 彗星 ── */
-  .comet {
-    position: absolute;
-    pointer-events: none;
-    z-index: 3;
-    animation: cometFall var(--speed) linear forwards;
-    opacity: 0;
-  }
-
-  .comet-head {
-    width: 6px; height: 6px;
-    background: radial-gradient(circle, #ffffff 0%, #ffeedd 40%, rgba(255,200,150,0) 100%);
-    border-radius: 50%;
-    box-shadow:
-      0 0 12px 4px rgba(255,220,180,0.9),
-      0 0 30px 10px rgba(255,180,130,0.5),
-      0 0 60px 20px rgba(255,140,100,0.3);
-  }
-
-  .comet-tail {
-    position: absolute;
-    top: 50%; right: 4px;
-    transform: translateY(-50%);
-    width: var(--tailLen);
-    height: 2px;
-    background: linear-gradient(90deg,
-      transparent 0%,
-      rgba(255,200,150,0.1) 20%,
-      rgba(255,180,130,0.3) 40%,
-      rgba(255,150,100,0.6) 60%,
-      rgba(255,220,180,0.9) 85%,
-      #ffffff 100%
-    );
-  }
-
-  .comet-tail::after {
-    content: '';
-    position: absolute;
-    top: -3px; right: 0;
-    width: var(--tailLen);
-    height: 8px;
-    background: radial-gradient(ellipse at right,
-      rgba(255,200,150,0.6) 0%,
-      rgba(255,150,100,0.2) 40%,
-      transparent 70%
-    );
-  }
-
-  @keyframes cometFall {
-    0%   { opacity: 0; transform: translate(0, 0) rotate(var(--angle)); }
-    8%   { opacity: 1; }
-    75%  { opacity: 0.6; }
-    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--angle)); }
-  }
-
-  /* ── 分裂碎片 ── */
-  .fragment {
-    position: absolute;
-    pointer-events: none;
-    z-index: 3;
-    width: 2px; height: 2px;
-    background: #ffcc99;
-    border-radius: 50%;
-    box-shadow: 0 0 4px 1px rgba(255,200,150,0.8);
-    animation: fragmentFall var(--speed) linear forwards;
-  }
-
-  @keyframes fragmentFall {
-    0%   { opacity: 1; transform: translate(0, 0); }
-    60%  { opacity: 0.7; }
-    100% { opacity: 0; transform: translate(var(--fx), var(--fy)); }
-  }
-
-  /* ── 組紐リボン（红线） ── */
-  .ribbon-particle {
-    position: absolute;
-    pointer-events: none;
-    z-index: 2;
-    border-radius: 50%;
-    animation: ribbonDrift var(--dur) ease-in-out forwards;
-  }
-
-  @keyframes ribbonDrift {
-    0%   { opacity: 0; transform: translate(0, 0) scale(0); }
-    20%  { opacity: 0.9; transform: translate(var(--rx1), var(--ry1)) scale(1); }
-    60%  { opacity: 0.5; transform: translate(var(--rx2), var(--ry2)) scale(0.7); }
-    100% { opacity: 0; transform: translate(var(--rx3), var(--ry3)) scale(0); }
-  }
-
-  /* ── 涟漪 ── */
-  .ripple {
-    position: absolute;
-    pointer-events: none;
-    z-index: 4;
-    border: 1.5px solid rgba(255,180,140,0.7);
-    border-radius: 50%;
-    animation: rippleOut 1.2s ease-out forwards;
-  }
-
-  @keyframes rippleOut {
-    0%   { width: 0; height: 0; opacity: 1; transform: translate(-50%, -50%); }
-    100% { width: 150px; height: 150px; opacity: 0; transform: translate(-50%, -50%); }
-  }
-
-  /* ── 底部文字 ── */
-  .title-area {
+  /* ══════ 远山 ══════ */
+  .mountains {
     position: fixed;
-    bottom: 8%;
-    width: 100%;
-    text-align: center;
+    top: 35%; left: 0;
+    width: 100%; height: 35%;
     pointer-events: none;
-    z-index: 10;
+    z-index: 1;
   }
-
-  .jp-title {
-    font-size: clamp(28px, 5vw, 48px);
-    letter-spacing: 0.3em;
-    color: rgba(255,255,255,0.75);
-    text-shadow: 0 0 40px rgba(255,180,130,0.4), 0 2px 4px rgba(0,0,0,0.3);
-    margin-bottom: 6px;
+  .mt {
+    position: absolute;
+    border-radius: 50%;
+    background: #93b87c;
+    bottom: 0;
   }
+  .mt1 { left: -10%; width: 50%; height: 90%; background: #8aaf72; border-radius: 50% 50% 0 0; }
+  .mt2 { left: 30%; width: 55%; height: 70%; background: #9dbf88; border-radius: 50% 50% 0 0; }
+  .mt3 { right: -15%; width: 50%; height: 85%; background: #86a86e; border-radius: 50% 50% 0 0; }
 
-  .jp-sub {
-    font-size: clamp(12px, 2vw, 16px);
-    letter-spacing: 0.35em;
-    color: rgba(255,220,200,0.5);
-    text-shadow: 0 0 20px rgba(255,150,100,0.3);
-  }
-
-  /* ── 左上提示 ── */
-  .hint {
-    position: fixed;
-    top: 6%;
-    left: 6%;
-    color: rgba(255,255,255,0.35);
-    font-size: 13px;
-    letter-spacing: 0.2em;
-    pointer-events: none;
-    z-index: 10;
-    line-height: 2;
-  }
-
-  /* ── 右上诗句 ── */
-  .quote {
-    position: fixed;
-    top: 6%;
-    right: 6%;
-    color: rgba(255,255,255,0.4);
-    font-size: 13px;
-    letter-spacing: 0.15em;
-    pointer-events: none;
-    z-index: 10;
-    text-align: right;
-    line-height: 2;
-  }
-
-  /* ── 云层 ── */
-  .cloud {
+  /* ══════ 草地 ══════ */
+  .ground {
     position: fixed;
     bottom: 0; left: 0;
-    width: 120%; height: 25%;
+    width: 100%; height: 38%;
+    z-index: 2;
     pointer-events: none;
-    z-index: 0;
-    background: linear-gradient(to top,
-      rgba(255,200,160,0.15) 0%,
-      rgba(255,180,140,0.08) 30%,
-      transparent 100%
+    background: linear-gradient(180deg,
+      #8bbf60 0%, #7aaf4d 15%, #6ca040 40%, #5d8c35 100%
     );
   }
 
-  .cloud::before {
-    content: '';
+  /* ── 小路 ── */
+  .path {
     position: absolute;
-    top: -40px;
-    left: 5%; width: 30%; height: 50px;
-    background: radial-gradient(ellipse, rgba(255,200,170,0.12) 0%, transparent 70%);
-    border-radius: 50%;
-    animation: cloudDrift 20s ease-in-out infinite;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 18%;
+    height: 100%;
+    background: linear-gradient(180deg, #d4b896 0%, #c9a882 50%, #bf9e74 100%);
+    clip-path: polygon(30% 0, 70% 0, 100% 100%, 0% 100%);
+    border-radius: 40% 40% 0 0 / 10% 10% 0 0;
   }
 
-  .cloud::after {
-    content: '';
+  /* ── 草丛装饰 ── */
+  .grass-tuft {
     position: absolute;
-    top: -20px;
-    right: 15%; width: 25%; height: 35px;
-    background: radial-gradient(ellipse, rgba(255,190,160,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-    animation: cloudDrift 25s ease-in-out infinite reverse;
+    bottom: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .grass-blade {
+    position: absolute;
+    bottom: 0;
+    width: 3px;
+    background: #5d9a35;
+    border-radius: 50% 50% 0 0;
+    transform-origin: bottom center;
+    animation: sway 2.5s ease-in-out infinite;
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-5deg); }
+    50%      { transform: rotate(5deg); }
   }
 
-  @keyframes cloudDrift {
-    0%, 100% { transform: translateX(0); }
-    50%      { transform: translateX(30px); }
+  /* ══════ 花朵 ══════ */
+  .flower {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    animation: flowerSway 3s ease-in-out infinite;
+  }
+  .flower-center {
+    width: 10px; height: 10px;
+    background: #ffcc00;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 4px rgba(255,180,0,0.5);
+  }
+  .petal {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+  }
+  @keyframes flowerSway {
+    0%, 100% { transform: rotate(-3deg) scale(1); }
+    50%      { transform: rotate(3deg) scale(1.03); }
+  }
+
+  /* ══════ 蝴蝶 ══════ */
+  .butterfly {
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+    transition: none;
+  }
+  .wing {
+    position: absolute;
+    width: 10px; height: 14px;
+    border-radius: 50% 50% 30% 30%;
+    top: 2px;
+    transform-origin: center 5px;
+    animation: flap 0.15s ease-in-out infinite alternate;
+  }
+  .wing-left  { left: -5px; background: #ffb347; }
+  .wing-right { right: -5px; background: #ff8c42; }
+  @keyframes flap {
+    0%   { transform: rotateY(0deg); }
+    100% { transform: rotateY(70deg); }
+  }
+
+  /* ══════ 人物 ══════ */
+  .character {
+    position: absolute;
+    z-index: 5;
+    transition: left 0.01s linear, top 0.01s linear;
+    pointer-events: none;
+  }
+
+  /* 小男孩 */
+  .boy-body {
+    position: relative;
+    width: 40px; height: 60px;
+  }
+  .boy-head {
+    width: 26px; height: 28px;
+    background: #ffe0bd;
+    border-radius: 50%;
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+  .boy-hair {
+    width: 28px; height: 14px;
+    background: #3d2b1f;
+    border-radius: 50% 50% 0 0;
+    position: absolute;
+    top: -2px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+  }
+  .boy-hat {
+    width: 34px; height: 10px;
+    background: #f4e4bc;
+    border-radius: 50%;
+    position: absolute;
+    top: 4px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .boy-hat-top {
+    width: 20px; height: 13px;
+    background: #f4e4bc;
+    border-radius: 50% 50% 20% 20%;
+    position: absolute;
+    top: -8px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+  }
+  .boy-shirt {
+    width: 24px; height: 22px;
+    background: #ffffff;
+    border-radius: 6px 6px 2px 2px;
+    position: absolute;
+    top: 25px; left: 50%;
+    transform: translateX(-50%);
+  }
+  .boy-shorts {
+    width: 22px; height: 14px;
+    background: #5b7aad;
+    border-radius: 2px 2px 4px 4px;
+    position: absolute;
+    top: 44px; left: 50%;
+    transform: translateX(-50%);
+  }
+  .boy-legs { display: flex; justify-content: center; gap: 6px; position: absolute; top: 55px; left: 50%; transform: translateX(-50%); }
+  .boy-leg {
+    width: 6px; height: 14px;
+    background: #ffe0bd; border-radius: 0 0 3px 3px;
+  }
+  .boy-shoe {
+    width: 8px; height: 4px;
+    background: #5c4033; border-radius: 2px;
+    position: absolute; top: 14px; left: -1px;
+  }
+  .boy-arm {
+    position: absolute;
+    width: 5px; height: 16px;
+    background: #ffe0bd; border-radius: 3px;
+    top: 28px;
+    transform-origin: top center;
+  }
+  .boy-arm-left  { left: -2px; animation: armSwing 0.8s ease-in-out infinite; }
+  .boy-arm-right { right: -2px; animation: armSwing 0.8s ease-in-out infinite reverse; }
+  @keyframes armSwing {
+    0%, 100% { transform: rotate(-20deg); }
+    50%      { transform: rotate(20deg); }
+  }
+
+  /* 小女孩 */
+  .girl-body {
+    position: relative;
+    width: 40px; height: 60px;
+  }
+  .girl-head {
+    width: 26px; height: 28px;
+    background: #ffe0bd;
+    border-radius: 50%;
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+  .girl-hair {
+    width: 28px; height: 20px;
+    background: #2d1810;
+    border-radius: 50% 50% 10% 10%;
+    position: absolute;
+    top: -2px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+  }
+  .girl-pigtail {
+    position: absolute;
+    width: 8px; height: 18px;
+    background: #2d1810;
+    border-radius: 40%;
+    top: 2px;
+    animation: pigtailBounce 1s ease-in-out infinite;
+  }
+  .girl-pigtail-l { left: -3px; transform-origin: top center; animation-delay: 0s; }
+  .girl-pigtail-r { right: -3px; transform-origin: top center; animation-delay: 0.15s; }
+  @keyframes pigtailBounce {
+    0%, 100% { transform: rotate(-5deg); }
+    50%      { transform: rotate(10deg); }
+  }
+  .girl-ribbon {
+    position: absolute;
+    width: 6px; height: 6px;
+    background: #ff6b6b; border-radius: 50%;
+    top: -1px;
+    z-index: 5;
+  }
+  .girl-ribbon-l { left: 0px; }
+  .girl-ribbon-r { right: 0px; }
+  .girl-dress {
+    width: 28px; height: 23px;
+    background: #ff9aa2;
+    border-radius: 8px 8px 4px 4px;
+    position: absolute;
+    top: 25px; left: 50%;
+    transform: translateX(-50%);
+  }
+  .girl-dress-bottom {
+    width: 34px; height: 10px;
+    background: #ff9aa2;
+    border-radius: 0 0 12px 12px;
+    position: absolute;
+    top: 44px; left: 50%;
+    transform: translateX(-50%);
+  }
+  .girl-legs { display: flex; justify-content: center; gap: 6px; position: absolute; top: 53px; left: 50%; transform: translateX(-50%); }
+  .girl-leg {
+    width: 5px; height: 14px;
+    background: #ffe0bd; border-radius: 0 0 3px 3px;
+  }
+  .girl-shoe {
+    width: 7px; height: 4px;
+    background: #ff6b6b; border-radius: 2px;
+    position: absolute; top: 14px; left: -1px;
+  }
+  .girl-arm {
+    position: absolute;
+    width: 5px; height: 16px;
+    background: #ffe0bd; border-radius: 3px;
+    top: 28px;
+    transform-origin: top center;
+  }
+  .girl-arm-left  { left: -2px; animation: armSwing 0.8s ease-in-out infinite reverse; }
+  .girl-arm-right { right: -2px; animation: armSwing 0.8s ease-in-out infinite; }
+
+  /* ══════ 提示文字 ══════ */
+  .hint-text {
+    position: fixed;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    pointer-events: none;
+    font-size: clamp(13px, 2vw, 16px);
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.7);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    animation: hintPulse 2s ease-in-out infinite;
+  }
+  @keyframes hintPulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 0.8; }
+  }
+
+  /* ══════ 点击爱心 ══════ */
+  .heart {
+    position: absolute;
+    z-index: 6;
+    pointer-events: none;
+    font-size: 20px;
+    animation: heartFloat 1.5s ease-out forwards;
+  }
+  @keyframes heartFloat {
+    0%   { opacity: 1; transform: translate(0, 0) scale(0.5); }
+    50%  { opacity: 0.8; transform: translate(var(--hx), -40px) scale(1.2); }
+    100% { opacity: 0; transform: translate(var(--hx), -90px) scale(0.3); }
+  }
+
+  /* ══════ 小鸟 ══════ */
+  .bird {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    font-size: 18px;
+    animation: birdFly var(--dur) linear infinite;
+  }
+  @keyframes birdFly {
+    0%   { transform: translate(0, 0) rotate(-5deg); }
+    25%  { transform: translate(120px, -30px) rotate(0deg); }
+    50%  { transform: translate(240px, -10px) rotate(5deg); }
+    75%  { transform: translate(360px, -25px) rotate(0deg); }
+    100% { transform: translate(480px, -5px) rotate(-5deg); }
   }
 </style>
 </head>
 <body>
 
-<!-- 星空 -->
-<div class="stars-layer" id="starsLayer"></div>
+<!-- 天空 -->
+<div class="sky">
+  <div class="sun"></div>
+</div>
 
 <!-- 云层 -->
-<div class="cloud"></div>
+<div id="clouds"></div>
 
-<!-- UI 文字 -->
-<div class="hint">
-  黄昏時 ─ 誰そ彼<br>
-  触れるだけで<br>
-  想いが溢れる
+<!-- 远山 -->
+<div class="mountains">
+  <div class="mt mt1"></div>
+  <div class="mt mt2"></div>
+  <div class="mt mt3"></div>
 </div>
 
-<div class="quote">
-  会いたい<br>
-  もう一度<br>
-  ─ 君の名は。
+<!-- 草地 -->
+<div class="ground">
+  <div class="path"></div>
 </div>
 
-<div class="title-area">
-  <div class="jp-title">君 の 名 は 。</div>
-  <div class="jp-sub">─ 黄 昏 の 空 ─</div>
-</div>
+<!-- 提示 -->
+<div class="hint-text">🌻 点击草地 · 一起玩耍吧 🌻</div>
 
 <script>
 // ═══════════════════════
-//  星空生成
+//  云朵
 // ═══════════════════════
-const starsLayer = document.getElementById('starsLayer');
-const STAR_COUNT = 200;
+const cloudsEl = document.getElementById('clouds');
+cloudsEl.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:60%;pointer-events:none;z-index:0;';
 
-for (let i = 0; i < STAR_COUNT; i++) {
-  const star = document.createElement('div');
-  star.classList.add('star');
-  const size = Math.random() * 2.2 + 0.6;
-  star.style.width  = size + 'px';
-  star.style.height = size + 'px';
-  star.style.left   = Math.random() * 100 + '%';
-  star.style.top    = Math.random() * 100 + '%';
-  star.style.setProperty('--dur', (Math.random() * 3 + 2.5) + 's');
-  star.style.setProperty('--dly', Math.random() * 5 + 's');
-  // 部分星星带暖色
-  if (Math.random() < 0.15) {
-    star.style.background = '#ffccaa';
-    star.style.boxShadow = '0 0 4px 1px rgba(255,200,150,0.5)';
-  }
-  starsLayer.appendChild(star);
-}
-
-// ═══════════════════════
-//  彗星 / 流星
-// ═══════════════════════
-function createComet(x, y, angleDeg, size = 'normal') {
-  const container = document.createElement('div');
-  container.classList.add('comet');
-
-  const rad = (angleDeg * Math.PI) / 180;
-  const distance = window.innerWidth + window.innerHeight;
-  const dx = Math.cos(rad) * distance;
-  const dy = Math.sin(rad) * distance;
-
-  container.style.left = x + 'px';
-  container.style.top  = y + 'px';
-  container.style.setProperty('--angle', angleDeg + 'deg');
-  container.style.setProperty('--dx', dx + 'px');
-  container.style.setProperty('--dy', dy + 'px');
-  container.style.setProperty('--speed', (Math.random() * 0.8 + 0.6) + 's');
-
-  const isLarge = size === 'large';
-  const tailLen = isLarge ? (Math.random() * 120 + 80) : (Math.random() * 60 + 30);
-  container.style.setProperty('--tailLen', tailLen + 'px');
-
-  // 彗星头部
-  const head = document.createElement('div');
-  head.classList.add('comet-head');
-  if (isLarge) {
-    head.style.width = '10px';
-    head.style.height = '10px';
-    head.style.boxShadow = '0 0 20px 6px rgba(255,220,180,0.9), 0 0 50px 15px rgba(255,160,100,0.5), 0 0 90px 30px rgba(255,120,80,0.3)';
-  }
-  container.appendChild(head);
-
-  // 彗尾
-  const tail = document.createElement('div');
-  tail.classList.add('comet-tail');
-  container.appendChild(tail);
-
-  document.body.appendChild(container);
-
-  const duration = parseFloat(container.style.getPropertyValue('--speed')) * 1000 + 200;
-  setTimeout(() => container.remove(), duration);
-}
-
-// ═══════════════════════
-//  彗星分裂碎片
-// ═══════════════════════
-function createSplitFragments(x, y, count = 12) {
-  for (let i = 0; i < count; i++) {
-    const frag = document.createElement('div');
-    frag.classList.add('fragment');
-    const angle = Math.random() * 360;
-    const rad = (angle * Math.PI) / 180;
-    const fragDist = Math.random() * 250 + 60;
-    const fx = Math.cos(rad) * fragDist;
-    const fy = Math.sin(rad) * fragDist;
-    frag.style.left = x + 'px';
-    frag.style.top = y + 'px';
-    frag.style.setProperty('--fx', fx + 'px');
-    frag.style.setProperty('--fy', fy + 'px');
-    frag.style.setProperty('--speed', (Math.random() * 1.5 + 0.8) + 's');
-    if (Math.random() < 0.4) {
-      frag.style.background = '#ff9966';
-      frag.style.boxShadow = '0 0 6px 2px rgba(255,140,80,0.7)';
-    }
-    document.body.appendChild(frag);
-    const dur = parseFloat(frag.style.getPropertyValue('--speed')) * 1000 + 100;
-    setTimeout(() => frag.remove(), dur);
-  }
-}
-
-// ═══════════════════════
-//  组纽光玉（红色光点）
-// ═══════════════════════
-function createRibbonParticle(x, y) {
-  const p = document.createElement('div');
-  p.classList.add('ribbon-particle');
-  const size = Math.random() * 3 + 1.5;
-  p.style.width  = size + 'px';
-  p.style.height = size + 'px';
-  // 红线色系
-  const colors = ['#ff6b6b', '#ff8e8e', '#ffaaaa', '#ffccbb', '#ff9999'];
-  p.style.background = colors[Math.floor(Math.random() * colors.length)];
-  p.style.boxShadow = `0 0 ${size*2}px ${size}px ${p.style.background}`;
-  p.style.left = x + 'px';
-  p.style.top  = y + 'px';
-
-  p.style.setProperty('--rx1', (Math.random() * 60 - 30) + 'px');
-  p.style.setProperty('--ry1', (Math.random() * -40 - 10) + 'px');
-  p.style.setProperty('--rx2', (Math.random() * 80 - 40) + 'px');
-  p.style.setProperty('--ry2', (Math.random() * -80 - 30) + 'px');
-  p.style.setProperty('--rx3', (Math.random() * 100 - 50) + 'px');
-  p.style.setProperty('--ry3', (Math.random() * -130 - 40) + 'px');
-  p.style.setProperty('--dur', (Math.random() * 1.2 + 1) + 's');
-
-  document.body.appendChild(p);
-  const dur = parseFloat(p.style.getPropertyValue('--dur')) * 1000 + 100;
-  setTimeout(() => p.remove(), dur);
-}
-
-// ═══════════════════════
-//  浮游光斑
-// ═══════════════════════
-function createSparkle(x, y) {
-  const s = document.createElement('div');
-  s.classList.add('sparkle');
-  const size = Math.random() * 4 + 2;
-  s.style.width  = size + 'px';
-  s.style.height = size + 'px';
-  s.style.left = (x + (Math.random() - 0.5) * 30) + 'px';
-  s.style.top  = (y + (Math.random() - 0.5) * 20) + 'px';
-  s.style.background = `radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,220,180,0.8) 30%, transparent 70%)`;
-  s.style.borderRadius = '50%';
-  s.style.boxShadow = `0 0 ${size*3}px ${size}px rgba(255,200,150,0.5)`;
-  s.style.setProperty('--dur', (Math.random() * 1.5 + 1) + 's');
-  document.body.appendChild(s);
-  const dur = parseFloat(s.style.getPropertyValue('--dur')) * 1000 + 100;
-  setTimeout(() => s.remove(), dur);
-}
-
-// ═══════════════════════
-//  鼠标移动 — 光玉 + 光斑
-// ═══════════════════════
-let lastMoveTime = 0;
-const MOVE_INTERVAL = 80;
-
-document.addEventListener('mousemove', (e) => {
-  const now = Date.now();
-  if (now - lastMoveTime < MOVE_INTERVAL) return;
-  lastMoveTime = now;
-
-  createRibbonParticle(
-    e.clientX + (Math.random() - 0.5) * 30,
-    e.clientY + (Math.random() - 0.5) * 20
-  );
-  createSparkle(e.clientX, e.clientY);
-});
-
-// ═══════════════════════
-//  点击 — 彗星爆发 + 分裂
-// ═══════════════════════
-document.addEventListener('click', (e) => {
-  // 涟漪
-  const ripple = document.createElement('div');
-  ripple.classList.add('ripple');
-  ripple.style.left = e.clientX + 'px';
-  ripple.style.top  = e.clientY + 'px';
-  document.body.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 1200);
-
-  // 光斑爆发
-  for (let i = 0; i < 20; i++) {
-    setTimeout(() => createSparkle(e.clientX, e.clientY), i * 15);
-  }
-
-  // 组纽爆发
-  for (let i = 0; i < 16; i++) {
-    setTimeout(() => createRibbonParticle(e.clientX, e.clientY), i * 20);
-  }
-
-  // 彗星分裂 — 从点击处向外
-  const cometCount = 6 + Math.floor(Math.random() * 5);
-  for (let i = 0; i < cometCount; i++) {
-    const angle = (360 / cometCount) * i + Math.random() * 15;
-    createComet(e.clientX, e.clientY, angle, 'normal');
-  }
-
-  // 碎片
-  createSplitFragments(e.clientX, e.clientY, 14);
-});
-
-// ═══════════════════════
-//  大彗星 — 偶尔划过天空
-// ═══════════════════════
-function grandComet() {
-  // 从右上角划过
-  const x = Math.random() * window.innerWidth * 0.5 + window.innerWidth * 0.3;
-  const y = Math.random() * window.innerHeight * 0.25;
-  const angle = Math.random() * 30 + 140; // 偏右下
-
-  const container = document.createElement('div');
-  container.classList.add('comet');
-  const rad = (angle * Math.PI) / 180;
-  const distance = window.innerWidth + window.innerHeight;
-  container.style.left = x + 'px';
-  container.style.top = y + 'px';
-  container.style.setProperty('--angle', angle + 'deg');
-  container.style.setProperty('--dx', (Math.cos(rad) * distance) + 'px');
-  container.style.setProperty('--dy', (Math.sin(rad) * distance) + 'px');
-  container.style.setProperty('--speed', '3s');
-  container.style.setProperty('--tailLen', '180px');
-
-  const head = document.createElement('div');
-  head.classList.add('comet-head');
-  head.style.width = '14px';
-  head.style.height = '14px';
-  head.style.boxShadow = `
-    0 0 25px 8px rgba(255,240,220,1),
-    0 0 60px 20px rgba(255,180,120,0.7),
-    0 0 100px 35px rgba(255,130,80,0.4),
-    0 0 160px 50px rgba(255,100,50,0.2)
+function createCloud(x, y, scale) {
+  const cloud = document.createElement('div');
+  cloud.style.cssText = `
+    position:absolute; left:${x}%; top:${y}%;
+    width:${100 * scale}px; height:${50 * scale}px;
+    background:white; border-radius:50%;
+    opacity:0.85;
+    animation: cloudDrift ${20 + Math.random() * 10}s linear infinite;
   `;
-  // 双色彗核
-  head.style.background = 'radial-gradient(circle, #ffffff 0%, #ffeebb 60%, rgba(255,150,100,0) 100%)';
+  // 不规则云朵形状
+  const bumps = [
+    { w: 80, h: 45, l: 0,  t: 5 },
+    { w: 60, h: 40, l: 20, t: -15 },
+    { w: 70, h: 50, l: 50, t: 0 },
+    { w: 50, h: 35, l: 35, t: 10 },
+  ];
+  bumps.forEach(b => {
+    const bump = document.createElement('div');
+    bump.style.cssText = `
+      position:absolute; width:${b.w * scale}px; height:${b.h * scale}px;
+      background:white; border-radius:50%; left:${b.l * scale}px; top:${b.t * scale}px;
+    `;
+    cloud.appendChild(bump);
+  });
+  cloudsEl.appendChild(cloud);
 
-  const tail = document.createElement('div');
-  tail.classList.add('comet-tail');
-
-  container.appendChild(head);
-  container.appendChild(tail);
-  document.body.appendChild(container);
-
-  // 在彗星飞行途中分裂
-  setTimeout(() => {
-    const rect = container.getBoundingClientRect();
-    if (rect.left > 0 && rect.top > 0) {
-      createSplitFragments(
-        rect.left + rect.width / 2,
-        rect.top + rect.height / 2,
-        20
-      );
+  // 循环飘动
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `
+    @keyframes cloudDrift${x} {
+      0%   { transform: translateX(0px); }
+      100% { transform: translateX(${window.innerWidth + 200}px); }
     }
-  }, 1500);
+  `;
+  document.head.appendChild(styleSheet);
+  cloud.style.animationName = `cloudDrift${x}`;
 
-  setTimeout(() => container.remove(), 3500);
+  // 重置位置
+  const resetCloud = () => {
+    cloud.style.left = '-200px';
+    setTimeout(() => {
+      cloud.style.left = (Math.random() * 100) + '%';
+      cloud.style.top = (Math.random() * 30) + '%';
+    }, parseFloat(cloud.style.animationDuration) * 1000);
+  };
+  setInterval(resetCloud, parseFloat(cloud.style.animationDuration) * 1000);
 
-  // 下次大彗星
-  setTimeout(grandComet, Math.random() * 15000 + 12000);
+  return cloud;
 }
-setTimeout(grandComet, 4000);
+
+for (let i = 0; i < 8; i++) {
+  createCloud(Math.random() * 100, Math.random() * 35, 0.5 + Math.random() * 0.8);
+}
 
 // ═══════════════════════
-//  自动小流星
+//  草丛
 // ═══════════════════════
-function autoShootingStar() {
-  const x = Math.random() * window.innerWidth;
-  const y = Math.random() * window.innerHeight * 0.5;
-  const angle = Math.random() * 50 - 25 + 150;
-  createComet(x, y, angle, 'normal');
-  setTimeout(autoShootingStar, Math.random() * 4000 + 3000);
+function createGrassTuft(x, y) {
+  const tuft = document.createElement('div');
+  tuft.classList.add('grass-tuft');
+  tuft.style.left = x + 'px';
+  tuft.style.bottom = y + 'px';
+  for (let i = 0; i < 5; i++) {
+    const blade = document.createElement('div');
+    blade.classList.add('grass-blade');
+    blade.style.left = (i * 5) + 'px';
+    blade.style.height = (8 + Math.random() * 14) + 'px';
+    blade.style.animationDelay = (Math.random() * 2) + 's';
+    tuft.appendChild(blade);
+  }
+  document.querySelector('.ground').appendChild(tuft);
 }
-setTimeout(autoShootingStar, 2000);
+
+for (let i = 0; i < 30; i++) {
+  createGrassTuft(
+    Math.random() * window.innerWidth,
+    Math.random() * window.innerHeight * 0.35
+  );
+}
+
+// ═══════════════════════
+//  花朵
+// ═══════════════════════
+const flowerColors = ['#ff6b6b', '#ffa94d', '#ffd43b', '#f06595', '#ff8787', '#ffe066', '#da77f2'];
+
+function createFlower(x, y) {
+  const flower = document.createElement('div');
+  flower.classList.add('flower');
+  flower.style.left = x + 'px';
+  flower.style.top = y + 'px';
+
+  const center = document.createElement('div');
+  center.classList.add('flower-center');
+  flower.appendChild(center);
+
+  const color = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+  for (let i = 0; i < 5; i++) {
+    const petal = document.createElement('div');
+    petal.classList.add('petal');
+    petal.style.background = color;
+    const angle = (i / 5) * 360;
+    petal.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translateY(-8px)`;
+    flower.appendChild(petal);
+  }
+
+  // 茎
+  const stem = document.createElement('div');
+  stem.style.cssText = `
+    position:absolute; width:2px; height:14px; background:#6b9e3a;
+    top:10px; left:50%; transform:translateX(-50%);
+  `;
+  flower.appendChild(stem);
+
+  document.body.appendChild(flower);
+  setTimeout(() => flower.remove(), 15000);
+}
+
+// 初始花朵
+for (let i = 0; i < 25; i++) {
+  const fx = Math.random() * window.innerWidth * 0.9 + window.innerWidth * 0.05;
+  const fy = window.innerHeight * 0.60 + Math.random() * window.innerHeight * 0.28;
+  createFlower(fx, fy);
+}
+
+// ═══════════════════════
+//  蝴蝶
+// ═══════════════════════
+function createButterfly(x, y) {
+  const butterfly = document.createElement('div');
+  butterfly.classList.add('butterfly');
+  butterfly.style.left = x + 'px';
+  butterfly.style.top = y + 'px';
+
+  const wingL = document.createElement('div');
+  wingL.classList.add('wing', 'wing-left');
+  const wingR = document.createElement('div');
+  wingR.classList.add('wing', 'wing-right');
+
+  const hue = Math.random() * 60 + 20;
+  wingL.style.background = `hsl(${hue}, 80%, 55%)`;
+  wingR.style.background = `hsl(${hue + 15}, 85%, 50%)`;
+
+  butterfly.appendChild(wingL);
+  butterfly.appendChild(wingR);
+  document.body.appendChild(butterfly);
+
+  // 飞舞动画
+  let phaseX = x, phaseY = y;
+  let t = 0;
+  const speed = 0.5 + Math.random() * 1;
+  const amp = 30 + Math.random() * 50;
+
+  function flutter() {
+    if (!butterfly.isConnected) return;
+    t += 0.02;
+    phaseX = x + Math.sin(t * speed) * amp;
+    phaseY = y + Math.cos(t * speed * 1.3) * amp * 0.6;
+    butterfly.style.left = phaseX + 'px';
+    butterfly.style.top = phaseY + 'px';
+    requestAnimationFrame(flutter);
+  }
+  flutter();
+
+  // 一段时间后消失
+  setTimeout(() => butterfly.remove(), 8000 + Math.random() * 7000);
+}
+
+// ═══════════════════════
+//  小男孩 & 小女孩
+// ═══════════════════════
+const boyEl = document.createElement('div');
+boyEl.classList.add('character');
+boyEl.style.left = '25%';
+boyEl.style.top = '58%';
+boyEl.innerHTML = `
+  <div class="boy-body">
+    <div class="boy-hat-top"></div>
+    <div class="boy-hat"></div>
+    <div class="boy-hair"></div>
+    <div class="boy-head">
+      <div style="position:absolute;top:10px;left:5px;width:4px;height:4px;background:#333;border-radius:50%;"></div>
+      <div style="position:absolute;top:10px;right:5px;width:4px;height:4px;background:#333;border-radius:50%;"></div>
+      <div style="position:absolute;top:16px;left:50%;transform:translateX(-50%);width:3px;height:2px;background:#ffaaaa;border-radius:1px;"></div>
+    </div>
+    <div class="boy-shirt"></div>
+    <div class="boy-shorts"></div>
+    <div class="boy-arm boy-arm-left"></div>
+    <div class="boy-arm boy-arm-right"></div>
+    <div class="boy-legs">
+      <div class="boy-leg" style="position:relative;"><div class="boy-shoe"></div></div>
+      <div class="boy-leg" style="position:relative;"><div class="boy-shoe"></div></div>
+    </div>
+  </div>
+`;
+document.body.appendChild(boyEl);
+
+const girlEl = document.createElement('div');
+girlEl.classList.add('character');
+girlEl.style.left = '35%';
+girlEl.style.top = '58%';
+girlEl.innerHTML = `
+  <div class="girl-body">
+    <div class="girl-hair">
+      <div class="girl-pigtail girl-pigtail-l">
+        <div class="girl-ribbon girl-ribbon-l"></div>
+      </div>
+      <div class="girl-pigtail girl-pigtail-r">
+        <div class="girl-ribbon girl-ribbon-r"></div>
+      </div>
+    </div>
+    <div class="girl-head">
+      <div style="position:absolute;top:10px;left:5px;width:4px;height:4px;background:#333;border-radius:50%;"></div>
+      <div style="position:absolute;top:10px;right:5px;width:4px;height:4px;background:#333;border-radius:50%;"></div>
+      <div style="position:absolute;top:17px;left:50%;transform:translateX(-50%);width:4px;height:3px;background:#ff7777;border-radius:2px;"></div>
+    </div>
+    <div class="girl-dress"></div>
+    <div class="girl-dress-bottom"></div>
+    <div class="girl-arm girl-arm-left"></div>
+    <div class="girl-arm girl-arm-right"></div>
+    <div class="girl-legs">
+      <div class="girl-leg" style="position:relative;"><div class="girl-shoe"></div></div>
+      <div class="girl-leg" style="position:relative;"><div class="girl-shoe"></div></div>
+    </div>
+  </div>
+`;
+document.body.appendChild(girlEl);
+
+// ═══════════════════════
+//  人物移动逻辑
+// ═══════════════════════
+let boyTarget = null, girlTarget = null;
+
+function getCharacterPos(el) {
+  const rect = el.getBoundingClientRect();
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height * 0.6,
+  };
+}
+
+function moveCharacter(el, targetX, targetY, speed) {
+  const pos = getCharacterPos(el);
+  const dx = targetX - pos.x;
+  const dy = targetY - pos.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 5) return true; // 到达
+
+  const step = Math.min(speed, dist);
+  const newX = pos.x + (dx / dist) * step;
+  const newY = pos.y + (dy / dist) * step;
+
+  const percentX = (newX / window.innerWidth) * 100;
+  const percentY = (newY / window.innerHeight) * 100;
+  el.style.left = percentX + '%';
+  el.style.top = percentY + '%';
+
+  // 左右翻转
+  if (dx < -2) {
+    el.style.transform = 'scaleX(-1)';
+  } else if (dx > 2) {
+    el.style.transform = 'scaleX(1)';
+  }
+
+  return false;
+}
+
+// 点击移动
+document.addEventListener('click', (e) => {
+  // 限制在草地范围
+  if (e.clientY < window.innerHeight * 0.48) return;
+
+  // 花朵
+  if (Math.random() < 0.6) {
+    createFlower(e.clientX - 5, e.clientY - 15);
+  }
+
+  // 蝴蝶
+  if (Math.random() < 0.3) {
+    createButterfly(e.clientX, e.clientY);
+  }
+
+  // 男孩走向点击处
+  boyTarget = { x: e.clientX - 40, y: e.clientY - 30 };
+  girlTarget = { x: e.clientX + 40, y: e.clientY - 30 };
+
+  // 爱心飘起
+  const heart = document.createElement('div');
+  heart.classList.add('heart');
+  heart.textContent = ['💕', '💖', '✨', '🌸', '🌼'][Math.floor(Math.random() * 5)];
+  heart.style.left = e.clientX + 'px';
+  heart.style.top = e.clientY + 'px';
+  heart.style.setProperty('--hx', (Math.random() * 40 - 20) + 'px');
+  document.body.appendChild(heart);
+  setTimeout(() => heart.remove(), 1500);
+});
+
+// 游戏循环
+function gameLoop() {
+  // 移动男孩
+  if (boyTarget) {
+    const arrived = moveCharacter(boyEl, boyTarget.x, boyTarget.y, 2.5);
+    if (arrived) boyTarget = null;
+  }
+
+  // 移动女孩
+  if (girlTarget) {
+    // 女孩稍微慢一点
+    const girlPos = getCharacterPos(girlEl);
+    const gdx = girlTarget.x - girlPos.x;
+    const gdy = girlTarget.y - girlPos.y;
+    if (Math.sqrt(gdx * gdx + gdy * gdy) < 50) {
+      // 靠近男孩后停在他旁边
+    }
+    const arrived = moveCharacter(girlEl, girlTarget.x, girlTarget.y, 2);
+    if (arrived) girlTarget = null;
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+gameLoop();
+
+// ═══════════════════════
+//  小鸟
+// ═══════════════════════
+function createBird(x, y) {
+  const bird = document.createElement('div');
+  bird.classList.add('bird');
+  bird.textContent = '🐦';
+  bird.style.left = x + 'px';
+  bird.style.top = y + 'px';
+  bird.style.setProperty('--dur', (8 + Math.random() * 8) + 's');
+  document.body.appendChild(bird);
+  const dur = parseFloat(bird.style.getPropertyValue('--dur')) * 1000 + 500;
+  setTimeout(() => bird.remove(), dur);
+}
+
+setInterval(() => {
+  createBird(-30, Math.random() * window.innerHeight * 0.35 + 20);
+}, 4000);
+
+// ═══════════════════════
+//  自动蝴蝶
+// ═══════════════════════
+setInterval(() => {
+  const bx = Math.random() * window.innerWidth * 0.7 + window.innerWidth * 0.1;
+  const by = window.innerHeight * 0.5 + Math.random() * window.innerHeight * 0.25;
+  createButterfly(bx, by);
+}, 5000);
 
 // ═══════════════════════
 //  触摸支持
 // ═══════════════════════
-document.addEventListener('touchmove', (e) => {
-  e.preventDefault();
-  const touch = e.touches[0];
-  const now = Date.now();
-  if (now - lastMoveTime < MOVE_INTERVAL) return;
-  lastMoveTime = now;
-  createRibbonParticle(touch.clientX, touch.clientY);
-  createSparkle(touch.clientX, touch.clientY);
-}, { passive: false });
-
 document.addEventListener('touchstart', (e) => {
   const touch = e.touches[0];
-  const cometCount = 5 + Math.floor(Math.random() * 4);
-  for (let i = 0; i < cometCount; i++) {
-    const angle = (360 / cometCount) * i + Math.random() * 15;
-    createComet(touch.clientX, touch.clientY, angle, 'normal');
-  }
-  createSplitFragments(touch.clientX, touch.clientY, 10);
-});
+  if (touch.clientY < window.innerHeight * 0.48) return;
 
-// ═══════════════════════
-//  背景漂浮光斑
-// ═══════════════════════
-function ambientSparkle() {
-  const x = Math.random() * window.innerWidth;
-  const y = Math.random() * window.innerHeight * 0.7 + window.innerHeight * 0.15;
-  createSparkle(x, y);
-  setTimeout(ambientSparkle, Math.random() * 2000 + 1500);
-}
-setTimeout(ambientSparkle, 1000);
+  boyTarget = { x: touch.clientX - 40, y: touch.clientY - 30 };
+  girlTarget = { x: touch.clientX + 40, y: touch.clientY - 30 };
+
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => createFlower(
+      touch.clientX + (Math.random() - 0.5) * 60,
+      touch.clientY + (Math.random() - 0.5) * 30
+    ), i * 50);
+  }
+});
 </script>
 </body>
 </html>
