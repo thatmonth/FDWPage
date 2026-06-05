@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ 流星划过 · Meteor Shower</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: radial-gradient(ellipse at bottom, #0d1b2a 0%, #000011 100%);
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+    cursor: crosshair;
+  }
+
+  /* 星空层 */
+  .stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--duration) ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.5); }
+  }
+
+  /* 流星 */
+  .meteor {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: shoot var(--speed) linear forwards;
+    opacity: 0;
+  }
+
+  .meteor::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: var(--tail);
+    height: 1.5px;
+    background: linear-gradient(90deg, rgba(255,255,255,0), var(--color));
+    right: 3px;
+  }
+
+  @keyframes shoot {
+    0%   { opacity: 0; transform: translate(0, 0) rotate(var(--angle)); }
+    5%   { opacity: 1; }
+    70%  { opacity: 0.8; }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--angle)); }
+  }
+
+  /* 点击涟漪 */
+  .ripple {
+    position: absolute;
+    border: 2px solid rgba(255,255,255,0.6);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: ripple 1s ease-out forwards;
+  }
+
+  @keyframes ripple {
+    0%   { width: 0; height: 0; opacity: 1; transform: translate(-50%, -50%); }
+    100% { width: 120px; height: 120px; opacity: 0; transform: translate(-50%, -50%); }
+  }
+
+  /* 底部信息 */
+  .info {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.5);
+    font-size: 14px;
+    letter-spacing: 3px;
+    pointer-events: none;
+    text-align: center;
+    user-select: none;
+  }
+
+  .counter {
+    position: fixed;
+    top: 30px;
+    right: 40px;
+    color: rgba(255,255,255,0.7);
+    font-size: 18px;
+    letter-spacing: 2px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .counter span {
+    color: #ffd700;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  /* 星座连线提示 */
+  .hint {
+    position: fixed;
+    top: 30px;
+    left: 40px;
+    color: rgba(255,255,255,0.35);
+    font-size: 13px;
+    letter-spacing: 2px;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<div class="counter">🌠 <span id="count">0</span></div>
+<div class="hint">
+  点击天空 · 召唤流星<br>
+  移动鼠标 · 划破夜空
+</div>
+<div class="stars" id="stars"></div>
+<div class="info">✦ 流 星 划 过 ✦</div>
+
+<script>
+// ========== 星空背景 ==========
+const starsContainer = document.getElementById('stars');
+const STAR_COUNT = 180;
+
+for (let i = 0; i < STAR_COUNT; i++) {
+  const star = document.createElement('div');
+  star.classList.add('star');
+  const size = Math.random() * 2.5 + 0.8;
+  star.style.width  = size + 'px';
+  star.style.height = size + 'px';
+  star.style.left   = Math.random() * 100 + '%';
+  star.style.top    = Math.random() * 100 + '%';
+  star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+  star.style.setProperty('--delay', Math.random() * 4 + 's');
+  starsContainer.appendChild(star);
+}
+
+// ========== 流星系统 ==========
+let meteorCount = 0;
+const counterEl = document.getElementById('count');
+
+function createMeteor(x, y, angleDeg) {
+  const meteor = document.createElement('div');
+  meteor.classList.add('meteor');
+
+  // 角度转方向
+  const rad = (angleDeg * Math.PI) / 180;
+  const distance = window.innerWidth + window.innerHeight;
+  const dx = Math.cos(rad) * distance;
+  const dy = Math.sin(rad) * distance;
+
+  meteor.style.left = x + 'px';
+  meteor.style.top  = y + 'px';
+  meteor.style.setProperty('--angle', angleDeg + 'deg');
+  meteor.style.setProperty('--dx', dx + 'px');
+  meteor.style.setProperty('--dy', dy + 'px');
+  meteor.style.setProperty('--speed', (Math.random() * 0.6 + 0.5) + 's');
+  meteor.style.setProperty('--tail', (Math.random() * 80 + 40) + 'px');
+
+  // 流星颜色：白色 / 淡蓝 / 淡金
+  const colors = ['#ffffff', '#a0d8ff', '#ffd700', '#ffeebb', '#bbddff'];
+  meteor.style.setProperty('--color', colors[Math.floor(Math.random() * colors.length)]);
+
+  document.body.appendChild(meteor);
+
+  // 动画结束后移除
+  const duration = parseFloat(meteor.style.getPropertyValue('--speed')) * 1000 + 100;
+  setTimeout(() => meteor.remove(), duration);
+
+  // 计数
+  meteorCount++;
+  counterEl.textContent = meteorCount;
+}
+
+// ========== 鼠标移动 — 跟随流星 ==========
+let lastMeteorTime = 0;
+const METEOR_COOLDOWN = 150; // ms
+
+document.addEventListener('mousemove', (e) => {
+  const now = Date.now();
+  if (now - lastMeteorTime < METEOR_COOLDOWN) return;
+  lastMeteorTime = now;
+
+  // 在鼠标附近随机偏移
+  const ox = (Math.random() - 0.5) * 60;
+  const oy = (Math.random() - 0.5) * 60;
+  // 随机角度，大致向右下或左下
+  const angle = Math.random() * 40 - 20 + (Math.random() > 0.5 ? 160 : 20);
+  // 或者：纯随机方向
+  const randomAngle = Math.random() * 360;
+
+  createMeteor(e.clientX + ox, e.clientY + oy, randomAngle);
+});
+
+// ========== 点击 — 流星爆发 ==========
+document.addEventListener('click', (e) => {
+  // 涟漪效果
+  const ripple = document.createElement('div');
+  ripple.classList.add('ripple');
+  ripple.style.left = e.clientX + 'px';
+  ripple.style.top  = e.clientY + 'px';
+  document.body.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 1000);
+
+  // 爆发流星
+  const burstCount = 8 + Math.floor(Math.random() * 8);
+  for (let i = 0; i < burstCount; i++) {
+    const angle = (360 / burstCount) * i + Math.random() * 20;
+    const dist = Math.random() * 40;
+    const rad = (angle * Math.PI) / 180;
+    createMeteor(
+      e.clientX + Math.cos(rad) * dist,
+      e.clientY + Math.sin(rad) * dist,
+      angle
+    );
+  }
+});
+
+// ========== 触摸支持 ==========
+document.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const now = Date.now();
+  if (now - lastMeteorTime < METEOR_COOLDOWN) return;
+  lastMeteorTime = now;
+
+  const angle = Math.random() * 360;
+  createMeteor(touch.clientX, touch.clientY, angle);
+}, { passive: false });
+
+document.addEventListener('touchstart', (e) => {
+  const touch = e.touches[0];
+  const burstCount = 6 + Math.floor(Math.random() * 6);
+  for (let i = 0; i < burstCount; i++) {
+    const angle = (360 / burstCount) * i + Math.random() * 20;
+    createMeteor(touch.clientX, touch.clientY, angle);
+  }
+});
+
+// ========== 偶尔自动流星 ==========
+function autoMeteor() {
+  const x = Math.random() * window.innerWidth;
+  const y = Math.random() * window.innerHeight * 0.6;
+  const angle = Math.random() * 60 - 30 + 135; // 偏右下方向
+  createMeteor(x, y, angle);
+  setTimeout(autoMeteor, Math.random() * 3000 + 2000);
+}
+setTimeout(autoMeteor, 2000);
+</script>
+</body>
+</html>
