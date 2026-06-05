@@ -1,269 +1,591 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>✨ 流星划过 · Meteor Shower</title>
+<title>君の名は。✨ 黄昏の空</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    background: radial-gradient(ellipse at bottom, #0d1b2a 0%, #000011 100%);
     height: 100vh;
     overflow: hidden;
-    font-family: 'Courier New', monospace;
     cursor: crosshair;
+    font-family: 'Hiragino Mincho Pro', 'Noto Serif JP', 'SimSun', serif;
+    /* 黄昏渐变 — 新海诚标志性天空 */
+    background: linear-gradient(
+      180deg,
+      #0a0a2e 0%,
+      #1a1040 15%,
+      #2d1b69 30%,
+      #5b3a8c 45%,
+      #c06c84 60%,
+      #f4a460 72%,
+      #ffcc80 82%,
+      #ffecd2 92%,
+      #ffe8d6 100%
+    );
+    user-select: none;
   }
 
-  /* 星空层 */
-  .stars {
+  /* ── 星空层 ── */
+  .stars-layer {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
     pointer-events: none;
+    z-index: 1;
   }
 
   .star {
     position: absolute;
     background: white;
     border-radius: 50%;
-    animation: twinkle var(--duration) ease-in-out infinite;
-    animation-delay: var(--delay);
+    animation: starGlow var(--dur) ease-in-out infinite;
+    animation-delay: var(--dly);
   }
 
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.3; transform: scale(1); }
-    50%      { opacity: 1;   transform: scale(1.5); }
+  @keyframes starGlow {
+    0%, 100% { opacity: 0.25; box-shadow: 0 0 0px white; }
+    50%      { opacity: 1;    box-shadow: 0 0 6px 2px rgba(255,255,255,0.7); }
   }
 
-  /* 流星 */
-  .meteor {
+  /* ── 光斑粒子（かたわれ時的光） ── */
+  .sparkle {
     position: absolute;
-    width: 2px;
-    height: 2px;
-    background: white;
-    border-radius: 50%;
     pointer-events: none;
-    animation: shoot var(--speed) linear forwards;
+    z-index: 2;
+    animation: floatUp var(--dur) linear forwards;
+  }
+
+  @keyframes floatUp {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-180px) scale(0); }
+  }
+
+  /* ── 彗星 ── */
+  .comet {
+    position: absolute;
+    pointer-events: none;
+    z-index: 3;
+    animation: cometFall var(--speed) linear forwards;
     opacity: 0;
   }
 
-  .meteor::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: var(--tail);
-    height: 1.5px;
-    background: linear-gradient(90deg, rgba(255,255,255,0), var(--color));
-    right: 3px;
+  .comet-head {
+    width: 6px; height: 6px;
+    background: radial-gradient(circle, #ffffff 0%, #ffeedd 40%, rgba(255,200,150,0) 100%);
+    border-radius: 50%;
+    box-shadow:
+      0 0 12px 4px rgba(255,220,180,0.9),
+      0 0 30px 10px rgba(255,180,130,0.5),
+      0 0 60px 20px rgba(255,140,100,0.3);
   }
 
-  @keyframes shoot {
+  .comet-tail {
+    position: absolute;
+    top: 50%; right: 4px;
+    transform: translateY(-50%);
+    width: var(--tailLen);
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255,200,150,0.1) 20%,
+      rgba(255,180,130,0.3) 40%,
+      rgba(255,150,100,0.6) 60%,
+      rgba(255,220,180,0.9) 85%,
+      #ffffff 100%
+    );
+  }
+
+  .comet-tail::after {
+    content: '';
+    position: absolute;
+    top: -3px; right: 0;
+    width: var(--tailLen);
+    height: 8px;
+    background: radial-gradient(ellipse at right,
+      rgba(255,200,150,0.6) 0%,
+      rgba(255,150,100,0.2) 40%,
+      transparent 70%
+    );
+  }
+
+  @keyframes cometFall {
     0%   { opacity: 0; transform: translate(0, 0) rotate(var(--angle)); }
-    5%   { opacity: 1; }
-    70%  { opacity: 0.8; }
+    8%   { opacity: 1; }
+    75%  { opacity: 0.6; }
     100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--angle)); }
   }
 
-  /* 点击涟漪 */
+  /* ── 分裂碎片 ── */
+  .fragment {
+    position: absolute;
+    pointer-events: none;
+    z-index: 3;
+    width: 2px; height: 2px;
+    background: #ffcc99;
+    border-radius: 50%;
+    box-shadow: 0 0 4px 1px rgba(255,200,150,0.8);
+    animation: fragmentFall var(--speed) linear forwards;
+  }
+
+  @keyframes fragmentFall {
+    0%   { opacity: 1; transform: translate(0, 0); }
+    60%  { opacity: 0.7; }
+    100% { opacity: 0; transform: translate(var(--fx), var(--fy)); }
+  }
+
+  /* ── 組紐リボン（红线） ── */
+  .ribbon-particle {
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    border-radius: 50%;
+    animation: ribbonDrift var(--dur) ease-in-out forwards;
+  }
+
+  @keyframes ribbonDrift {
+    0%   { opacity: 0; transform: translate(0, 0) scale(0); }
+    20%  { opacity: 0.9; transform: translate(var(--rx1), var(--ry1)) scale(1); }
+    60%  { opacity: 0.5; transform: translate(var(--rx2), var(--ry2)) scale(0.7); }
+    100% { opacity: 0; transform: translate(var(--rx3), var(--ry3)) scale(0); }
+  }
+
+  /* ── 涟漪 ── */
   .ripple {
     position: absolute;
-    border: 2px solid rgba(255,255,255,0.6);
+    pointer-events: none;
+    z-index: 4;
+    border: 1.5px solid rgba(255,180,140,0.7);
     border-radius: 50%;
-    pointer-events: none;
-    animation: ripple 1s ease-out forwards;
+    animation: rippleOut 1.2s ease-out forwards;
   }
 
-  @keyframes ripple {
+  @keyframes rippleOut {
     0%   { width: 0; height: 0; opacity: 1; transform: translate(-50%, -50%); }
-    100% { width: 120px; height: 120px; opacity: 0; transform: translate(-50%, -50%); }
+    100% { width: 150px; height: 150px; opacity: 0; transform: translate(-50%, -50%); }
   }
 
-  /* 底部信息 */
-  .info {
+  /* ── 底部文字 ── */
+  .title-area {
     position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255,255,255,0.5);
-    font-size: 14px;
-    letter-spacing: 3px;
-    pointer-events: none;
+    bottom: 8%;
+    width: 100%;
     text-align: center;
-    user-select: none;
-  }
-
-  .counter {
-    position: fixed;
-    top: 30px;
-    right: 40px;
-    color: rgba(255,255,255,0.7);
-    font-size: 18px;
-    letter-spacing: 2px;
     pointer-events: none;
-    user-select: none;
+    z-index: 10;
   }
 
-  .counter span {
-    color: #ffd700;
-    font-size: 28px;
-    font-weight: bold;
+  .jp-title {
+    font-size: clamp(28px, 5vw, 48px);
+    letter-spacing: 0.3em;
+    color: rgba(255,255,255,0.75);
+    text-shadow: 0 0 40px rgba(255,180,130,0.4), 0 2px 4px rgba(0,0,0,0.3);
+    margin-bottom: 6px;
   }
 
-  /* 星座连线提示 */
+  .jp-sub {
+    font-size: clamp(12px, 2vw, 16px);
+    letter-spacing: 0.35em;
+    color: rgba(255,220,200,0.5);
+    text-shadow: 0 0 20px rgba(255,150,100,0.3);
+  }
+
+  /* ── 左上提示 ── */
   .hint {
     position: fixed;
-    top: 30px;
-    left: 40px;
+    top: 6%;
+    left: 6%;
     color: rgba(255,255,255,0.35);
     font-size: 13px;
-    letter-spacing: 2px;
+    letter-spacing: 0.2em;
     pointer-events: none;
-    user-select: none;
-    line-height: 1.8;
+    z-index: 10;
+    line-height: 2;
+  }
+
+  /* ── 右上诗句 ── */
+  .quote {
+    position: fixed;
+    top: 6%;
+    right: 6%;
+    color: rgba(255,255,255,0.4);
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    pointer-events: none;
+    z-index: 10;
+    text-align: right;
+    line-height: 2;
+  }
+
+  /* ── 云层 ── */
+  .cloud {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 120%; height: 25%;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(to top,
+      rgba(255,200,160,0.15) 0%,
+      rgba(255,180,140,0.08) 30%,
+      transparent 100%
+    );
+  }
+
+  .cloud::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    left: 5%; width: 30%; height: 50px;
+    background: radial-gradient(ellipse, rgba(255,200,170,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: cloudDrift 20s ease-in-out infinite;
+  }
+
+  .cloud::after {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: 15%; width: 25%; height: 35px;
+    background: radial-gradient(ellipse, rgba(255,190,160,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: cloudDrift 25s ease-in-out infinite reverse;
+  }
+
+  @keyframes cloudDrift {
+    0%, 100% { transform: translateX(0); }
+    50%      { transform: translateX(30px); }
   }
 </style>
 </head>
 <body>
 
-<div class="counter">🌠 <span id="count">0</span></div>
+<!-- 星空 -->
+<div class="stars-layer" id="starsLayer"></div>
+
+<!-- 云层 -->
+<div class="cloud"></div>
+
+<!-- UI 文字 -->
 <div class="hint">
-  点击天空 · 召唤流星<br>
-  移动鼠标 · 划破夜空
+  黄昏時 ─ 誰そ彼<br>
+  触れるだけで<br>
+  想いが溢れる
 </div>
-<div class="stars" id="stars"></div>
-<div class="info">✦ 流 星 划 过 ✦</div>
+
+<div class="quote">
+  会いたい<br>
+  もう一度<br>
+  ─ 君の名は。
+</div>
+
+<div class="title-area">
+  <div class="jp-title">君 の 名 は 。</div>
+  <div class="jp-sub">─ 黄 昏 の 空 ─</div>
+</div>
 
 <script>
-// ========== 星空背景 ==========
-const starsContainer = document.getElementById('stars');
-const STAR_COUNT = 180;
+// ═══════════════════════
+//  星空生成
+// ═══════════════════════
+const starsLayer = document.getElementById('starsLayer');
+const STAR_COUNT = 200;
 
 for (let i = 0; i < STAR_COUNT; i++) {
   const star = document.createElement('div');
   star.classList.add('star');
-  const size = Math.random() * 2.5 + 0.8;
+  const size = Math.random() * 2.2 + 0.6;
   star.style.width  = size + 'px';
   star.style.height = size + 'px';
   star.style.left   = Math.random() * 100 + '%';
   star.style.top    = Math.random() * 100 + '%';
-  star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
-  star.style.setProperty('--delay', Math.random() * 4 + 's');
-  starsContainer.appendChild(star);
+  star.style.setProperty('--dur', (Math.random() * 3 + 2.5) + 's');
+  star.style.setProperty('--dly', Math.random() * 5 + 's');
+  // 部分星星带暖色
+  if (Math.random() < 0.15) {
+    star.style.background = '#ffccaa';
+    star.style.boxShadow = '0 0 4px 1px rgba(255,200,150,0.5)';
+  }
+  starsLayer.appendChild(star);
 }
 
-// ========== 流星系统 ==========
-let meteorCount = 0;
-const counterEl = document.getElementById('count');
+// ═══════════════════════
+//  彗星 / 流星
+// ═══════════════════════
+function createComet(x, y, angleDeg, size = 'normal') {
+  const container = document.createElement('div');
+  container.classList.add('comet');
 
-function createMeteor(x, y, angleDeg) {
-  const meteor = document.createElement('div');
-  meteor.classList.add('meteor');
-
-  // 角度转方向
   const rad = (angleDeg * Math.PI) / 180;
   const distance = window.innerWidth + window.innerHeight;
   const dx = Math.cos(rad) * distance;
   const dy = Math.sin(rad) * distance;
 
-  meteor.style.left = x + 'px';
-  meteor.style.top  = y + 'px';
-  meteor.style.setProperty('--angle', angleDeg + 'deg');
-  meteor.style.setProperty('--dx', dx + 'px');
-  meteor.style.setProperty('--dy', dy + 'px');
-  meteor.style.setProperty('--speed', (Math.random() * 0.6 + 0.5) + 's');
-  meteor.style.setProperty('--tail', (Math.random() * 80 + 40) + 'px');
+  container.style.left = x + 'px';
+  container.style.top  = y + 'px';
+  container.style.setProperty('--angle', angleDeg + 'deg');
+  container.style.setProperty('--dx', dx + 'px');
+  container.style.setProperty('--dy', dy + 'px');
+  container.style.setProperty('--speed', (Math.random() * 0.8 + 0.6) + 's');
 
-  // 流星颜色：白色 / 淡蓝 / 淡金
-  const colors = ['#ffffff', '#a0d8ff', '#ffd700', '#ffeebb', '#bbddff'];
-  meteor.style.setProperty('--color', colors[Math.floor(Math.random() * colors.length)]);
+  const isLarge = size === 'large';
+  const tailLen = isLarge ? (Math.random() * 120 + 80) : (Math.random() * 60 + 30);
+  container.style.setProperty('--tailLen', tailLen + 'px');
 
-  document.body.appendChild(meteor);
+  // 彗星头部
+  const head = document.createElement('div');
+  head.classList.add('comet-head');
+  if (isLarge) {
+    head.style.width = '10px';
+    head.style.height = '10px';
+    head.style.boxShadow = '0 0 20px 6px rgba(255,220,180,0.9), 0 0 50px 15px rgba(255,160,100,0.5), 0 0 90px 30px rgba(255,120,80,0.3)';
+  }
+  container.appendChild(head);
 
-  // 动画结束后移除
-  const duration = parseFloat(meteor.style.getPropertyValue('--speed')) * 1000 + 100;
-  setTimeout(() => meteor.remove(), duration);
+  // 彗尾
+  const tail = document.createElement('div');
+  tail.classList.add('comet-tail');
+  container.appendChild(tail);
 
-  // 计数
-  meteorCount++;
-  counterEl.textContent = meteorCount;
+  document.body.appendChild(container);
+
+  const duration = parseFloat(container.style.getPropertyValue('--speed')) * 1000 + 200;
+  setTimeout(() => container.remove(), duration);
 }
 
-// ========== 鼠标移动 — 跟随流星 ==========
-let lastMeteorTime = 0;
-const METEOR_COOLDOWN = 150; // ms
+// ═══════════════════════
+//  彗星分裂碎片
+// ═══════════════════════
+function createSplitFragments(x, y, count = 12) {
+  for (let i = 0; i < count; i++) {
+    const frag = document.createElement('div');
+    frag.classList.add('fragment');
+    const angle = Math.random() * 360;
+    const rad = (angle * Math.PI) / 180;
+    const fragDist = Math.random() * 250 + 60;
+    const fx = Math.cos(rad) * fragDist;
+    const fy = Math.sin(rad) * fragDist;
+    frag.style.left = x + 'px';
+    frag.style.top = y + 'px';
+    frag.style.setProperty('--fx', fx + 'px');
+    frag.style.setProperty('--fy', fy + 'px');
+    frag.style.setProperty('--speed', (Math.random() * 1.5 + 0.8) + 's');
+    if (Math.random() < 0.4) {
+      frag.style.background = '#ff9966';
+      frag.style.boxShadow = '0 0 6px 2px rgba(255,140,80,0.7)';
+    }
+    document.body.appendChild(frag);
+    const dur = parseFloat(frag.style.getPropertyValue('--speed')) * 1000 + 100;
+    setTimeout(() => frag.remove(), dur);
+  }
+}
+
+// ═══════════════════════
+//  组纽光玉（红色光点）
+// ═══════════════════════
+function createRibbonParticle(x, y) {
+  const p = document.createElement('div');
+  p.classList.add('ribbon-particle');
+  const size = Math.random() * 3 + 1.5;
+  p.style.width  = size + 'px';
+  p.style.height = size + 'px';
+  // 红线色系
+  const colors = ['#ff6b6b', '#ff8e8e', '#ffaaaa', '#ffccbb', '#ff9999'];
+  p.style.background = colors[Math.floor(Math.random() * colors.length)];
+  p.style.boxShadow = `0 0 ${size*2}px ${size}px ${p.style.background}`;
+  p.style.left = x + 'px';
+  p.style.top  = y + 'px';
+
+  p.style.setProperty('--rx1', (Math.random() * 60 - 30) + 'px');
+  p.style.setProperty('--ry1', (Math.random() * -40 - 10) + 'px');
+  p.style.setProperty('--rx2', (Math.random() * 80 - 40) + 'px');
+  p.style.setProperty('--ry2', (Math.random() * -80 - 30) + 'px');
+  p.style.setProperty('--rx3', (Math.random() * 100 - 50) + 'px');
+  p.style.setProperty('--ry3', (Math.random() * -130 - 40) + 'px');
+  p.style.setProperty('--dur', (Math.random() * 1.2 + 1) + 's');
+
+  document.body.appendChild(p);
+  const dur = parseFloat(p.style.getPropertyValue('--dur')) * 1000 + 100;
+  setTimeout(() => p.remove(), dur);
+}
+
+// ═══════════════════════
+//  浮游光斑
+// ═══════════════════════
+function createSparkle(x, y) {
+  const s = document.createElement('div');
+  s.classList.add('sparkle');
+  const size = Math.random() * 4 + 2;
+  s.style.width  = size + 'px';
+  s.style.height = size + 'px';
+  s.style.left = (x + (Math.random() - 0.5) * 30) + 'px';
+  s.style.top  = (y + (Math.random() - 0.5) * 20) + 'px';
+  s.style.background = `radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,220,180,0.8) 30%, transparent 70%)`;
+  s.style.borderRadius = '50%';
+  s.style.boxShadow = `0 0 ${size*3}px ${size}px rgba(255,200,150,0.5)`;
+  s.style.setProperty('--dur', (Math.random() * 1.5 + 1) + 's');
+  document.body.appendChild(s);
+  const dur = parseFloat(s.style.getPropertyValue('--dur')) * 1000 + 100;
+  setTimeout(() => s.remove(), dur);
+}
+
+// ═══════════════════════
+//  鼠标移动 — 光玉 + 光斑
+// ═══════════════════════
+let lastMoveTime = 0;
+const MOVE_INTERVAL = 80;
 
 document.addEventListener('mousemove', (e) => {
   const now = Date.now();
-  if (now - lastMeteorTime < METEOR_COOLDOWN) return;
-  lastMeteorTime = now;
+  if (now - lastMoveTime < MOVE_INTERVAL) return;
+  lastMoveTime = now;
 
-  // 在鼠标附近随机偏移
-  const ox = (Math.random() - 0.5) * 60;
-  const oy = (Math.random() - 0.5) * 60;
-  // 随机角度，大致向右下或左下
-  const angle = Math.random() * 40 - 20 + (Math.random() > 0.5 ? 160 : 20);
-  // 或者：纯随机方向
-  const randomAngle = Math.random() * 360;
-
-  createMeteor(e.clientX + ox, e.clientY + oy, randomAngle);
+  createRibbonParticle(
+    e.clientX + (Math.random() - 0.5) * 30,
+    e.clientY + (Math.random() - 0.5) * 20
+  );
+  createSparkle(e.clientX, e.clientY);
 });
 
-// ========== 点击 — 流星爆发 ==========
+// ═══════════════════════
+//  点击 — 彗星爆发 + 分裂
+// ═══════════════════════
 document.addEventListener('click', (e) => {
-  // 涟漪效果
+  // 涟漪
   const ripple = document.createElement('div');
   ripple.classList.add('ripple');
   ripple.style.left = e.clientX + 'px';
   ripple.style.top  = e.clientY + 'px';
   document.body.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 1000);
+  setTimeout(() => ripple.remove(), 1200);
 
-  // 爆发流星
-  const burstCount = 8 + Math.floor(Math.random() * 8);
-  for (let i = 0; i < burstCount; i++) {
-    const angle = (360 / burstCount) * i + Math.random() * 20;
-    const dist = Math.random() * 40;
-    const rad = (angle * Math.PI) / 180;
-    createMeteor(
-      e.clientX + Math.cos(rad) * dist,
-      e.clientY + Math.sin(rad) * dist,
-      angle
-    );
+  // 光斑爆发
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => createSparkle(e.clientX, e.clientY), i * 15);
   }
+
+  // 组纽爆发
+  for (let i = 0; i < 16; i++) {
+    setTimeout(() => createRibbonParticle(e.clientX, e.clientY), i * 20);
+  }
+
+  // 彗星分裂 — 从点击处向外
+  const cometCount = 6 + Math.floor(Math.random() * 5);
+  for (let i = 0; i < cometCount; i++) {
+    const angle = (360 / cometCount) * i + Math.random() * 15;
+    createComet(e.clientX, e.clientY, angle, 'normal');
+  }
+
+  // 碎片
+  createSplitFragments(e.clientX, e.clientY, 14);
 });
 
-// ========== 触摸支持 ==========
+// ═══════════════════════
+//  大彗星 — 偶尔划过天空
+// ═══════════════════════
+function grandComet() {
+  // 从右上角划过
+  const x = Math.random() * window.innerWidth * 0.5 + window.innerWidth * 0.3;
+  const y = Math.random() * window.innerHeight * 0.25;
+  const angle = Math.random() * 30 + 140; // 偏右下
+
+  const container = document.createElement('div');
+  container.classList.add('comet');
+  const rad = (angle * Math.PI) / 180;
+  const distance = window.innerWidth + window.innerHeight;
+  container.style.left = x + 'px';
+  container.style.top = y + 'px';
+  container.style.setProperty('--angle', angle + 'deg');
+  container.style.setProperty('--dx', (Math.cos(rad) * distance) + 'px');
+  container.style.setProperty('--dy', (Math.sin(rad) * distance) + 'px');
+  container.style.setProperty('--speed', '3s');
+  container.style.setProperty('--tailLen', '180px');
+
+  const head = document.createElement('div');
+  head.classList.add('comet-head');
+  head.style.width = '14px';
+  head.style.height = '14px';
+  head.style.boxShadow = `
+    0 0 25px 8px rgba(255,240,220,1),
+    0 0 60px 20px rgba(255,180,120,0.7),
+    0 0 100px 35px rgba(255,130,80,0.4),
+    0 0 160px 50px rgba(255,100,50,0.2)
+  `;
+  // 双色彗核
+  head.style.background = 'radial-gradient(circle, #ffffff 0%, #ffeebb 60%, rgba(255,150,100,0) 100%)';
+
+  const tail = document.createElement('div');
+  tail.classList.add('comet-tail');
+
+  container.appendChild(head);
+  container.appendChild(tail);
+  document.body.appendChild(container);
+
+  // 在彗星飞行途中分裂
+  setTimeout(() => {
+    const rect = container.getBoundingClientRect();
+    if (rect.left > 0 && rect.top > 0) {
+      createSplitFragments(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+        20
+      );
+    }
+  }, 1500);
+
+  setTimeout(() => container.remove(), 3500);
+
+  // 下次大彗星
+  setTimeout(grandComet, Math.random() * 15000 + 12000);
+}
+setTimeout(grandComet, 4000);
+
+// ═══════════════════════
+//  自动小流星
+// ═══════════════════════
+function autoShootingStar() {
+  const x = Math.random() * window.innerWidth;
+  const y = Math.random() * window.innerHeight * 0.5;
+  const angle = Math.random() * 50 - 25 + 150;
+  createComet(x, y, angle, 'normal');
+  setTimeout(autoShootingStar, Math.random() * 4000 + 3000);
+}
+setTimeout(autoShootingStar, 2000);
+
+// ═══════════════════════
+//  触摸支持
+// ═══════════════════════
 document.addEventListener('touchmove', (e) => {
   e.preventDefault();
   const touch = e.touches[0];
   const now = Date.now();
-  if (now - lastMeteorTime < METEOR_COOLDOWN) return;
-  lastMeteorTime = now;
-
-  const angle = Math.random() * 360;
-  createMeteor(touch.clientX, touch.clientY, angle);
+  if (now - lastMoveTime < MOVE_INTERVAL) return;
+  lastMoveTime = now;
+  createRibbonParticle(touch.clientX, touch.clientY);
+  createSparkle(touch.clientX, touch.clientY);
 }, { passive: false });
 
 document.addEventListener('touchstart', (e) => {
   const touch = e.touches[0];
-  const burstCount = 6 + Math.floor(Math.random() * 6);
-  for (let i = 0; i < burstCount; i++) {
-    const angle = (360 / burstCount) * i + Math.random() * 20;
-    createMeteor(touch.clientX, touch.clientY, angle);
+  const cometCount = 5 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < cometCount; i++) {
+    const angle = (360 / cometCount) * i + Math.random() * 15;
+    createComet(touch.clientX, touch.clientY, angle, 'normal');
   }
+  createSplitFragments(touch.clientX, touch.clientY, 10);
 });
 
-// ========== 偶尔自动流星 ==========
-function autoMeteor() {
+// ═══════════════════════
+//  背景漂浮光斑
+// ═══════════════════════
+function ambientSparkle() {
   const x = Math.random() * window.innerWidth;
-  const y = Math.random() * window.innerHeight * 0.6;
-  const angle = Math.random() * 60 - 30 + 135; // 偏右下方向
-  createMeteor(x, y, angle);
-  setTimeout(autoMeteor, Math.random() * 3000 + 2000);
+  const y = Math.random() * window.innerHeight * 0.7 + window.innerHeight * 0.15;
+  createSparkle(x, y);
+  setTimeout(ambientSparkle, Math.random() * 2000 + 1500);
 }
-setTimeout(autoMeteor, 2000);
+setTimeout(ambientSparkle, 1000);
 </script>
 </body>
 </html>
